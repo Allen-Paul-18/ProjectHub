@@ -118,6 +118,62 @@ ProjectHub/
 **`projects.json`**
 - Stores the list of projects and their launch configurations.
 
+## 🏗️ Architecture
+
+The following diagram illustrates how Project Hub's application shell coordinates project management, process execution, console output, and system monitoring.
+
+flowchart TD
+    User((User)) -->|starts| Launcher["Application launcher<br/>launcher.py"]
+    Launcher -->|opens| MainWindow["Dashboard coordinator<br/>ui/main_window.py"]
+
+    subgraph Projects["Project Configuration"]
+        ProjectManager["Project configuration manager<br/>core/project_manager.py"]
+        ProjectCard["Project cards<br/>ui/project_card.py"]
+        ProjectEditor["Project editor<br/>ui/project_editor.py"]
+    end
+
+    subgraph Processes["Process Operations"]
+        ProcessManager["Process lifecycle manager<br/>core/process_manager.py"]
+        ManagedProcesses["Launched project processes"]
+        ProcessManager -->|starts and tracks| ManagedProcesses
+    end
+
+    subgraph Monitoring["Monitoring and Output"]
+        RunningProjects["Running projects view<br/>ui/running_projects.py"]
+        Console["Integrated console<br/>ui/console_panel.py"]
+        SystemStats["System statistics view<br/>ui/system_stats.py"]
+        SystemMonitor["System metrics collector<br/>core/system_monitor.py"]
+        Psutil["psutil host metrics"]
+
+        SystemStats -->|requests metrics| SystemMonitor
+        SystemMonitor -->|reads metrics| Psutil
+    end
+
+    MainWindow -->|loads and updates| ProjectManager
+    MainWindow -->|coordinates| ProjectCard
+    MainWindow -->|opens| ProjectEditor
+    MainWindow -->|launches and stops| ProcessManager
+    MainWindow -->|shows| RunningProjects
+    MainWindow -->|displays output| Console
+    MainWindow -->|presents statistics| SystemStats
+
+    ProjectCard -->|emits actions| MainWindow
+    ProcessManager -->|forwards output| Console
+    RunningProjects -->|queries and stops| ProcessManager
+
+    classDef blue fill:#dbeafe,stroke:#2563eb,color:#172554
+    classDef amber fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef mint fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef rose fill:#ffe4e6,stroke:#e11d48,color:#881337
+    classDef indigo fill:#e0e7ff,stroke:#4f46e5,color:#312e81
+
+    class User,Launcher,MainWindow blue
+    class ProjectManager,ProjectCard,ProjectEditor amber
+    class ProcessManager,ManagedProcesses mint
+    class RunningProjects,Console,SystemStats,SystemMonitor rose
+    class Psutil indigo
+
+
 ## ⚙️ Installation
 
 ### Prerequisites
